@@ -1,0 +1,23 @@
+/* 去掉超链接的下划线 */
+.list-inline a {
+	text-decoration: none;
+}
+/* 当鼠标移动到图片显示红色边框 */
+.img:hover{border:1px solid red}
+
+/* 主要是显示该网站提供一些服务信息 */
+.yitao {	
+	padding: 20px 0;
+	text-align: center;
+}
+			
+.yitao .yitaoitem {
+	left: 50%;
+	text-align: left;		
+	}
+			
+.yitao .yitaoitem b {
+	padding: 0 10px;
+	font-size: 24px;
+	color: #C81623;
+}

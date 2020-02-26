@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ping.mapper.AdminCategoryManageMapper">
+
+    <!-- 如果有输入条件分类名称就查询相应的分类的总条数，否则查询所有分类总条数，使用动态sql进行判断拼接sql -->
+    <select id="selectCategoryTotal" parameterType="String" resultType="Integer">
+     select count(*) from category
+     <!-- 如果用户输入查询条件，这里还要拼接一下输入的分类名称 用if进行判断-->
+      <if test="cname!=null and cname!=''">
+       where cname like '%${cname}%'
+      </if>
+   </select>
+   
+    <!-- 后台分类管理 ，查询当前页分类信息,如果用户输入分类名称还有根据用户输入的分类名称查询
+          这里就使用动态sql语句进行拼接
+   -->
+   <select id="selectCategoryListInfo" resultType="Category">
+      <!-- 这里使用动态sql语句，开始打开分类列表用户没有输入搜索条件，这时候不存在where条件
+                       当用户输入搜索条件时候这是sql语句就带where条件，这里使用动态sql语句if进行判断拼接
+       -->
+      select * from category 
+      <!-- 如果存在用户输入的搜索条件就添加，否则查询当前页分类信息  -->
+      <if test="cname!=null and cname!=''">
+       where cname like '%${cname}%'
+      </if>
+      limit #{currentStart},#{pageSize}
+   </select>
+
+   <!-- 在添加分类时候，检查该分类名称是否存在 -->
+   <select id="checkCategoryIsExist" parameterType="String" resultType="Long">
+      select count(*) from category where cname = #{cname}
+   </select>
+   
+   <!-- 管理员添加分类信息 ,默认返回是int类型-->
+   <insert id="addCategoryInfo" parameterType="Category">
+       insert into category(cname) values(#{cname})
+   </insert>
+   
+   <!-- 管理员编辑分类，通过cid查询分类信息进行回显 -->
+   <select id="selectCategoryInfoByCid" parameterType="Integer" resultType="Category">
+       select * from category where cid=#{cid}
+   </select>
+   
+    <!-- 管理员编辑分类，通过cid进行更新分类信息 -->
+   <update id="updateCategoryInfo" parameterType="Category">
+      update category set cname=#{cname} where cid=#{cid}
+   </update>
+   
+   <!-- 管理员删除分类，通过cid进行删除 -->
+   <delete id="deleteCategoryInfo" parameterType="Integer">
+      delete from category where cid=#{cid}
+   </delete>
+</mapper>

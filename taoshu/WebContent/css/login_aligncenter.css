@@ -1,0 +1,19 @@
+/*使用css样式让div居于网页的正中*/
+.center-in {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	/* Safari and Chrome */
+	-webkit-transform: translate(-50%, -50%);
+	/* Firefox 4 */
+	-moz-transform: translate(-50%, -50%);
+	/*IE9*/
+	-ms-transform: translate(-50%, -50%);
+	/* Opera */
+	-o-transform: translate(-50%, -50%);
+	/*向右下都是正方向，左上都是负方向
+	 第一个参数是水平移动  向左移动自己的百分之五十
+	 第二个参数是垂直移动  向上移动自己的百分之五十  居中显示
+	 * */
+	transform: translate(-50%, -50%);
+}

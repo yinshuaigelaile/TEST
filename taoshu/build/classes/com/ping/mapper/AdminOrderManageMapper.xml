@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ping.mapper.AdminOrderManageMapper">
+
+ <!-- 如果有输入条件订单号就查询相应的订单的总条数（1），否则查询所有订单总条数，使用动态sql进行判断拼接sql -->
+    <select id="selectOrderTotal" parameterType="String" resultType="Integer">
+     select count(*) from orders
+     <!-- 如果用户输入查询条件，这里还要拼接一下输入的分类名称 用if进行判断-->
+      <if test="oid!=null and oid!=''">
+       where oid=#{oid}
+      </if>
+   </select>
+   
+   <!-- 后台订单管理 ，查询当前页订单信息,如果用户输入订单号还有根据用户输入的订单号查询
+          这里就使用动态sql语句进行拼接
+   -->
+   <select id="selectOrderListInfo" resultMap="OrderMap">
+      <!-- 这里使用动态sql语句，开始打开订单列表用户没有输入搜索条件，这时候不存在where条件
+                       当用户输入搜索条件时候这是sql语句就带where条件，这里使用动态sql语句if进行判断拼接
+       -->
+      select * from orders 
+      <!-- 如果存在用户输入的搜索条件就添加，否则查询当前页订单信息,对订单进行降序排序  -->
+      <if test="oid!=null and oid!=''">
+       where oid=#{oid}
+      </if>
+      order by ordertime desc limit #{currentStart},#{pageSize} 
+   </select>
+   <resultMap type="Order" id="OrderMap">
+       <id column="oid" property="oid"/>
+       <result column="ordertime" property="ordertime"/>
+       <result column="total" property="total"/>
+       <result column="payment_type" property="payment_type"/>
+       <result column="status" property="status"/>
+       <result column="receiver_name" property="receiver_name"/>
+       <result column="receiver_phone" property="receiver_phone"/>
+       <result column="receiver_address" property="receiver_address"/>
+       <!-- 订单和商品是多对一 -->
+       <association property="user" javaType="User">
+          <id column="uid" property="uid"/>
+       </association>
+   </resultMap>
+   
+   
+   <!-- 查询订单详情对象的订单项总条数 -->
+   <select id="selectOrderItemTotal" parameterType="String" resultType="Integer">
+     select count(*) from orderitem where oid=#{oid}
+   </select>
+   
+   <!-- 订单详情，通过订单号查询订单项表和商品表的信息 .涉及多表查询-->
+   <select id="selectOrderItemListInfo" resultMap="OrderItemMap">
+     select * from orderitem o INNER JOIN product p 
+     on o.pid=p.pid 
+     where oid=#{oid} limit #{currentStart},#{pageSize} 
+   </select>
+   <resultMap type="OrderItem" id="OrderItemMap">
+     <id column="itemid" property="itemid"/>
+     <result column="count" property="count"/>
+     <result column="subtotal" property="subtotal"/>
+     <!-- 订单项表和商品表一对一，这里还要手动进行封装一下 -->
+     <association property="product" javaType="Product">
+       <id column="pid" property="pid"/>
+       <result column="pname" property="pname"/>
+       <result column="market_price" property="market_price"/>
+       <result column="shop_price" property="shop_price"/>
+       <result column="pimage" property="pimage"/>
+       <result column="pdate" property="pdate"/>
+       <result column="is_hot" property="is_hot"/>
+       <result column="pdesc" property="pdesc"/>
+       <result column="pcolor" property="pcolor"/>
+       <result column="pflag" property="pflag"/>
+     </association>
+   </resultMap>
+</mapper>

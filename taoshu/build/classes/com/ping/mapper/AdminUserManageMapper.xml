@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ping.mapper.AdminUserManageMapper">
+   
+   <!-- 后台查询用户表的用户总数,当用户没有输入查询条件时候查询所有用户的总数，当输入用户名，进行模糊查询该用户数量，这里进行动态sql拼接 -->
+   <select id="selectUserTotal" parameterType="String" resultType="Integer">
+     select count(*) from user
+     <!-- 如果用户输入查询条件，这里还要拼接一下输入的用户名 用if进行判断-->
+      <if test="username!=null and username!=''">
+       where username like '%${username}%'
+      </if>
+   </select>
+   
+   <!-- 后台用户管理 ，查询当前页用户信息,如果用户输入用户名还有根据用户输入的用户名查询
+          这里就使用动态sql语句进行拼接
+   -->
+   <select id="selectUserListInfo" resultType="User">
+      <!-- 这里使用动态sql语句，开始打开用户列表用户没有输入搜索条件，这时候不存在where条件
+                       当用户输入搜索条件时候这是sql语句就带where条件，这里使用动态sql语句if进行判断拼接
+       -->
+      select * from user 
+      <!-- 如果存在用户输入的搜索条件就添加，否则查询当前页用户信息  -->
+      <if test="username!=null and username!=''">
+       where username like '%${username}%'
+      </if>
+      limit #{currentStart},#{pageSize}
+   </select>
+   
+   <!-- 在添加用户时候，检查该用户名是否存在 -->
+   <select id="checkUserIsExist" parameterType="String" resultType="Long">
+      select count(*) from user where username = #{username}
+   </select>
+   
+   <!-- 管理员添加用户信息 ,默认返回是int类型-->
+   <insert id="addUserInfo" parameterType="User">
+       insert into user(username,password,name,sex,birthday,telephone,email,address) values(#{username},#{password},#{name},#{sex},#{birthday},#{telephone},#{email},#{address})
+   </insert>
+   
+   <!-- 管理员编辑用户，通过uid查询用户信息进行回显 -->
+   <select id="selectUserInfoByUid" parameterType="Integer" resultType="User">
+       select * from user where uid=#{uid}
+   </select>
+   
+   <!-- 管理员编辑用户，通过uid进行更新用户信息 -->
+   <update id="updateUserInfo" parameterType="User">
+      update user set password=#{password},name=#{name},sex=#{sex},email=#{email},birthday=#{birthday},telephone=#{telephone},address=#{address} where uid=#{uid}
+   </update>
+   
+   <!-- 管理员删除用户，通过uid进行删除 -->
+   <delete id="deleteUserInfo" parameterType="Integer">
+      delete from user where uid=#{uid}
+   </delete>
+</mapper>

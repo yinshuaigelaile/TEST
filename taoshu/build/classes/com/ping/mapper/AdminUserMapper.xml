@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ping.mapper.AdminUserMapper">
+
+    <!--   通过管理员用户名查询该账号是否存在 -->
+    <select id="CheckAdminUserIsExist" parameterType="String" resultType="Long">
+           select count(*) from admin where admin_name = #{admin_username}
+    </select>
+    
+    <!-- 注册管理员账号，向admin表插入数据 -->
+    <insert id="addAdminRegisterInfo" parameterType="Admin" >
+        insert into admin(admin_name,admin_password,sex,email,telephone) values(#{admin_name},#{admin_password},#{sex},#{email},#{telephone})
+    </insert>
+    
+    <!-- 管理员登录，通过账号和密码查询是否存在该用户 -->
+    <select id="selectAdminUserByNameAndPassword" parameterType="Admin" resultType="Admin">
+      select * from admin where admin_name=#{admin_name} and admin_password=#{admin_password}
+    </select>
+    
+    <!-- 修改密码,如果传入多个参数这时候不需要指定参数类型，更新默认返回影响数据库的行数int类型 -->
+    <update id="updateAdminPassword">
+       update admin set admin_password=#{newAdminPassword} where id=#{admin_id}
+    </update>
+    
+    <!-- 修改管理员个人信息，通过管理员id查询该管理员个人信息 -->
+    <select id="selectAdminInfoById" parameterType="Integer" resultType="Admin">
+       select * from admin where id=#{admin_id}
+    </select>
+    
+    <!-- 修改更新管理员个人信息,通过id进行更新 -->
+    <update id="updateAdminInfo"  parameterType="Admin">
+       update admin set admin_password=#{admin_password},sex=#{sex},email=#{email},telephone=#{telephone} where id=#{id}
+    </update>
+  
+</mapper>

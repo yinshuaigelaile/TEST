@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ping.mapper.ProductMapper">
+  
+  <!-- 查询最新商品信息 -->
+  <select id="selectNewProductList" resultType="Product">
+         select * from product where pflag=1 order by pdate desc limit 0,12
+  </select>
+  
+  <!-- 查询热门商品信息 -->
+  <select id="selectHotProductList" resultType="Product">
+         select * from product where  is_hot=1 and pflag=1  order by pdate desc limit 0,12
+  </select>
+  
+  <!-- 通过商品id查询商品信息 -->
+  <!-- <select id="selectProductInfoById" parameterType="Integer" resultType="Product">
+      select * from product where pid = #{pid}
+  </select> -->
+  
+  <!-- 多表查询，根据商品pid查询商品信息和商品所属分类表的信息 
+            这里是做商品的详细信息页面
+     parameterType  函数参数类型
+     resultMap   结果返回值类型，多表查询需要自己手动映射
+  -->
+  <select id="selectProductInfoById" parameterType="Integer" resultMap="productcategory">
+    select * from product p join category c ON p.cid=c.cid WHERE p.pid= #{pid}
+  </select>
+  <!-- 自己对sql查询结果进行手动映射，就是将数据库表字段和实体类的属性进行匹配 -->
+  <resultMap type="Product" id="productcategory">
+       <!-- column代表数据库表字段， property代表实体类的属性-->
+       <id column="pid" property="pid"/>
+       <result column="pname" property="pname"/>
+       <result column="market_price" property="market_price"/>
+       <result column="shop_price" property="shop_price"/>
+       <result column="pimage" property="pimage"/>
+       <result column="pdate" property="pdate"/>
+       <result column="is_hot" property="is_hot"/>
+       <result column="pdesc" property="pdesc"/>
+       <result column="pflag" property="pflag"/>
+       <result column="pcolor" property="pcolor"/>
+       
+       <!-- 多对一 -->
+       <!--column:指外键值， property: 指的是属性的值, javaType：指的是属性的类型-->
+       <association column="cid" property="category" javaType="Category">
+            <id column="cid" property="cid"/>
+            <result column="cname" property="cname"/>
+       </association>
+  </resultMap>
+  
+  
+  <!-- 商品的分页显示，根据商品的cid查询该类商品的总条数 
+      这里是做点击每类商品显示的分页页面数据
+  -->
+  <select id="selectTotalCount" parameterType="Integer" resultType="Long">
+       select count(*) from product where cid=#{cid} and pflag=1
+  </select>
+  
+  <!-- 根据商品的分类cid，还有分页条件查询数据库 -->
+  <select id="selectCurrentPageProductList" parameterType="Integer" resultMap="productCategoryMap">
+     select * from product p join category c ON p.cid=c.cid where p.cid=#{cid} and p.pflag=1 limit #{currentStart},#{currentCount}
+  </select>
+  <!-- 多表查询进行手动映射 -->
+  <resultMap type="Product" id="productCategoryMap">
+       <!-- column代表数据库表字段， property代表实体类的属性-->
+       <id column="pid" property="pid"/>
+       <result column="pname" property="pname"/>
+       <result column="market_price" property="market_price"/>
+       <result column="shop_price" property="shop_price"/>
+       <result column="pimage" property="pimage"/>
+       <result column="pdate" property="pdate"/>
+       <result column="is_hot" property="is_hot"/>
+       <result column="pdesc" property="pdesc"/>
+       <result column="pflag" property="pflag"/>
+       <result column="pcolor" property="pcolor"/>
+        <!-- 多对一 -->
+       <!--column:指外键值， property: 指的是属性的值, javaType：指的是属性的类型-->
+       <association column="cid" property="category" javaType="Category">
+            <id column="cid" property="cid"/>
+            <result column="cname" property="cname"/>
+       </association>
+  </resultMap>
+  
+  <!-- 站内搜索，根据输入的名称作为商品名称模糊查询所有商品信息，只存储相关商品的名称，并且查前5条 ,并根据pdate进行降序排序取前5条
+     最简单的区别就是${}解析穿过来的参数值不带单引号，#{}解析传过来参数带单引号。${value}基本类型会自动获取值
+     如果传入的参数是基本类型(string,long,double,int,boolean,float等),那么${}中的变量名称必须是value
+    ${}:如果传入的参数是pojo类型,那么`${}`中的变量名称必须是pojo中的属性.属性.属性...
+  -->
+  <select id="getProductNameListByInput" parameterType="String" resultType="Product">
+     select * from product where pflag=1 and pname like '%${value}%' order by pdate DESC limit 0,5
+  </select>
+  
+  <!-- 根据商品名称模糊查询总记录数 -->
+  <select id="selectTotalCountByName" parameterType="String" resultType="Long">
+      select count(*) from product where pflag=1 and pname like '%${value}%'
+  </select>
+  
+  <!-- 站内搜索根据商品名称分页模糊查询 -->
+  <select id="selectCurrentPageProductListByName" resultType="Product">
+     select * from product where pflag=1 and pname like '%${searchContent}%' limit #{currentStart},#{currentCount}
+  </select>
+</mapper>

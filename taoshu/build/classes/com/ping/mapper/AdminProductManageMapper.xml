@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ping.mapper.AdminProductManageMapper">
+
+    <!-- 如果有输入条件商品名称就查询相应的分类的总条数，否则查询所有商品总条数，使用动态sql进行判断拼接sql -->
+    <select id="selectProductTotal" parameterType="String" resultType="Integer">
+     select count(*) from product
+     <!-- 如果用户输入查询条件，这里还要拼接一下输入的分类名称 用if进行判断-->
+      <if test="pname!=null and pname!=''">
+       where pname like '%${pname}%'
+      </if>
+   </select>
+   
+    <!-- 后台商品管理 ，查询当前页商品信息,如果用户输入商品名称还有根据用户输入的商品名称查询
+          这里就使用动态sql语句进行拼接
+   -->
+   <select id="selectProductListInfo" resultMap="productCategoryMap">
+      <!-- 这里使用动态sql语句，开始打开商品列表用户没有输入搜索条件，这时候不存在where条件
+                       当用户输入搜索条件时候这是sql语句就带where条件，这里使用动态sql语句if进行判断拼接
+       -->
+      select * from product 
+      <!-- 如果存在用户输入的搜索条件就添加，否则查询当前页商品信息 -->
+      <if test="pname!=null and pname!=''">
+       where pname like '%${pname}%'
+      </if>
+      limit #{currentStart},#{pageSize}
+   </select>
+   
+   <!-- 由于Product的cid使用category对象作为属性，mybatis不会自动映射进去里面的cid需要自己手动映射 -->
+   <resultMap type="Product" id="productCategoryMap">
+       <!-- column代表数据库表字段， property代表实体类的属性-->
+       <id column="pid" property="pid"/>
+       <result column="pname" property="pname"/>
+       <result column="market_price" property="market_price"/>
+       <result column="shop_price" property="shop_price"/>
+       <result column="pimage" property="pimage"/>
+       <result column="pdate" property="pdate"/>
+       <result column="is_hot" property="is_hot"/>
+       <result column="pdesc" property="pdesc"/>
+       <result column="pflag" property="pflag"/>
+       <result column="cid" property="category.cid"/>
+  </resultMap>
+  
+  <!-- //在添加商品时候先查询所有分类信息进行回显供用户选择 -->
+  <select id="selectAllCategoryInfo" resultType="Category">
+    select * from category
+  </select>
+   
+  <!-- 添加商品信息，将product里面数据插入到数据库 ,主键自动生成-->
+  <insert id="addProductInfo" parameterType="Product">
+      insert into product(pname,market_price,shop_price,pimage,pdate,is_hot,pdesc,pflag,cid) 
+      values(#{pname},#{market_price},#{shop_price},#{pimage},#{pdate},#{is_hot},#{pdesc},#{pflag},#{category.cid})
+  </insert>
+  
+  <!-- 编辑商品，通过商品的pid查询该条商品信息，进行回显 -->
+  <select id="selectProductInfoByPid" parameterType="Integer" resultMap="CategoryMap">
+     select * from product where pid=#{pid}
+  </select>
+  
+  <!-- 由于Product的cid使用category对象作为属性，mybatis不会自动映射进去里面的cid需要自己手动映射 -->
+   <resultMap type="Product" id="CategoryMap">
+       <!-- column代表数据库表字段， property代表实体类的属性-->
+       <id column="pid" property="pid"/>
+       <result column="pname" property="pname"/>
+       <result column="market_price" property="market_price"/>
+       <result column="shop_price" property="shop_price"/>
+       <result column="pimage" property="pimage"/>
+       <result column="pdate" property="pdate"/>
+       <result column="is_hot" property="is_hot"/>
+       <result column="pdesc" property="pdesc"/>
+       <result column="pflag" property="pflag"/>
+       <result column="cid" property="category.cid"/>
+  </resultMap>
+  
+  <!-- 编辑商品，通过商品的pid更新商品的信息 -->
+  <update id="editProductInfo" parameterType="Product">
+ 
+     <!-- 这里要判断一下用户是否上传更新的图片，如果没有就不更新图片，有就更新 -->
+     <!-- 用户上传了图片更新，除了pid，其他10个属性都要更新 -->
+     <if test="pimage !=null and pimage !=''">
+        update product set pname=#{pname},market_price=#{market_price},
+        shop_price=#{shop_price},pimage=#{pimage},pdate=#{pdate},is_hot=#{is_hot},
+        pdesc=#{pdesc},pflag=#{pflag},cid=#{category.cid} where pid=#{pid}
+     </if>
+     <!-- 用户没有上传图片更新,除了图片值和pid，其他9个属性都要更新 -->
+     <if test="pimage==null">
+        update product set pname=#{pname},market_price=#{market_price},
+        shop_price=#{shop_price},pdate=#{pdate},is_hot=#{is_hot},
+        pdesc=#{pdesc},pflag=#{pflag},cid=#{category.cid} where pid=#{pid}
+     </if>
+  </update>
+  
+   <!-- 管理员删除商品，通过pid进行删除 -->
+   <delete id="deleteProductInfo" parameterType="Integer">
+      delete from product where pid=#{pid}
+   </delete>
+   
+   <!-- 商品上架，通过商品pid更新商品信息，让pflag=1表示商品上架 -->
+   <update id="updatePublishProductInfoByPid" parameterType="Integer">
+      update product set pflag=1 where pid=#{pid}
+   </update>
+   
+   <!-- 商品下架，通过商品pid更新商品信息，让pflag=0表示商品下架 -->
+   <update id="updateUnpublishProductInfoByPid" parameterType="Integer">
+      update product set pflag=0 where pid=#{pid}
+   </update>
+</mapper>
